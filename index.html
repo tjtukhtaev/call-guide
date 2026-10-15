@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Call Flow Guide</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: colored subject tabs (same order and colors as the spreadsheet columns); the chosen subject lists its options, each opened with an arrow. */
+:root{
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#14202b; --muted:#5a6772; --line:#dde2e7;
+  --brand:#1f7a4d; --mark-bg:#fff1b8; --mark-ink:#5c4400; --say-bg:#f6f8fa;
+  --font:"Schibsted Grotesk",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f161d; --surface:#18222c; --ink:#e8eef3; --muted:#98a6b2; --line:#2a3744;
+  --brand:#5fd08f; --mark-bg:#4a3d0c; --mark-ink:#ffe8a0; --say-bg:#131c24; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f161d; --surface:#18222c; --ink:#e8eef3; --muted:#98a6b2; --line:#2a3744;
+  --brand:#5fd08f; --mark-bg:#4a3d0c; --mark-ink:#ffe8a0; --say-bg:#131c24; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.55;margin:0;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0}
+.wrap{max-width:820px;margin:0 auto;padding-bottom:56px}
+h1{font-size:clamp(26px,4vw,34px);line-height:1.15;margin:28px 0 6px;font-weight:700}
+.intro{margin:0 0 18px;color:var(--muted)}
+.step-lbl{font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:0 0 8px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 22px;padding:0;list-style:none}
+.tab{font:inherit;font-weight:600;font-size:15px;color:var(--ink);cursor:pointer;
+  background:color-mix(in srgb,var(--c) 38%,var(--surface));border:2px solid transparent;border-radius:10px;padding:9px 14px}
+.tab:hover{border-color:var(--c)}
+.tab[aria-selected="true"]{background:var(--c);border-color:var(--ink);color:#14202b}
+.tab:focus-visible,.opt>button:focus-visible,.copy:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--c);border-radius:14px;padding:18px 16px 12px}
+.panel h2{margin:0 0 2px;font-size:22px;line-height:1.25}
+.when{margin:0 0 14px;color:var(--muted);font-size:15px}
+.opts{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.opt{border:1px solid var(--line);border-radius:12px;background:var(--surface);overflow:hidden}
+.opt>button{all:unset;box-sizing:border-box;width:100%;display:flex;gap:12px;align-items:center;padding:13px 14px;cursor:pointer}
+.opt>button:hover{background:var(--say-bg)}
+.opt .num{font-family:var(--mono);font-size:12.5px;color:var(--muted);min-width:20px;flex:none}
+.opt .pre{flex:1;min-width:0;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opt .arr{flex:none;width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:color-mix(in srgb,var(--c) 45%,var(--surface));transition:transform .15s}
+.opt .arr svg{width:14px;height:14px}
+.opt.open .arr{transform:rotate(180deg)}
+.opt.open{border-color:var(--c);border-width:2px}
+.opt.open .pre{display:none}
+.full{display:none;padding:0 14px 14px 52px}
+.opt.open .full{display:block}
+.opt.open>button{padding-bottom:6px}
+.coach{margin:4px 0 4px;padding:12px 14px;border-radius:10px;background:color-mix(in srgb,var(--c) 22%,var(--surface));border:1px solid color-mix(in srgb,var(--c) 55%,var(--line))}
+.coach .h{font-size:12px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--ink);margin:0 0 4px}
+.coach p{margin:0 0 6px;font-size:15.5px;line-height:1.5}
+.coach p:last-child{margin:0}
+.coach .t{font-weight:600}
+.opt .arr{margin-left:auto}
+.full p{margin:0 0 12px;font-size:17px;line-height:1.55;overflow-wrap:anywhere}
+.copy{font:inherit;font-size:14px;font-weight:600;padding:8px 16px;border-radius:8px;border:1px solid var(--line);background:var(--say-bg);color:var(--ink);cursor:pointer;min-width:84px}
+.copy:hover{border-color:var(--brand);color:var(--brand)}
+.copy.done{background:var(--brand);border-color:var(--brand);color:#fff}
+.note{margin:12px 0 4px;padding:10px 14px;border-left:3px solid var(--c);background:var(--say-bg);border-radius:0 8px 8px 0;font-size:14.5px}
+mark{background:var(--mark-bg);color:var(--mark-ink);padding:0 3px;border-radius:3px;font-family:var(--mono);font-size:.92em}
+.legend{font-size:14px;color:var(--muted);margin:14px 0 0}
+.tab .cnt{margin-left:8px;font-family:var(--mono);font-size:12px;background:color-mix(in srgb,var(--ink) 12%,transparent);border-radius:999px;padding:1px 7px}
+.tab[aria-selected="true"] .cnt{background:rgba(20,32,43,.18)}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+.search{flex:1 1 240px;min-width:0;font:inherit;padding:11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)}
+.search:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.tog{font:inherit;font-weight:600;font-size:14px;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.tog:hover{border-color:var(--brand);color:var(--brand)}
+.tog:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.total{margin:0 0 16px;color:var(--muted);font-size:14.5px}
+.opt .num{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--c) 45%,var(--surface));color:var(--ink);font-size:12px;min-width:26px}
+.opt{border-left:6px solid var(--c)}
+.opt.open{border-left-width:6px}
+.from{display:inline-block;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;margin-bottom:6px;background:var(--c);color:#14202b}
+.opt .pre{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.full{padding-left:52px}
+@media (max-width:599px){.full{padding-left:14px}}
+@media (max-width:599px){.full{padding-left:14px}.tab{font-size:14px;padding:8px 11px}}
+@media (prefers-reduced-motion:reduce){.opt .arr{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1>Call Flow Guide</h1>
+  <p class="intro">1. Pick the subject. 2. Tap the arrow on an option to read it. 3. Read the coach's note, then say the line in your own words.</p>
+  <p class="total" id="total"></p>
+  <div class="bar"><input id="q" class="search" type="search" placeholder="Search all lines, e.g. budget, email, missed" aria-label="Search all lines"><button class="tog" id="tog" type="button">Open all</button></div>
+  <p class="step-lbl">Subjects (in call order)</p>
+  <ul class="tabs" id="tabs" role="tablist"></ul>
+  <section class="panel" id="panel" aria-live="polite"></section>
+  <p class="legend"><mark>XXX</mark> = fill in before you say or send it</p>
+</div>
+
+<script>
+var D=[
+{n:"Introduction",c:"#f4a7b9",w:"The first thing you say.",o:[
+ "I am calling from Business-class and my name is XXX. You are possibly looking for a flight to xxxxx. How can I help today?",
+ "I am XXX. I'm here to assist you with finding the best travel deals. How can I help you today?",
+ "How can I assist you with your travel plans today?"]},
+{n:"FTC",c:"#fbcf9c",w:"First-time contact: find out if they have contacted us before, and get their name.",o:[
+ "Before we proceed further, let me ask you a question. Have you ever contacted us before?",
+ "Alrighty. This is XXX. I will be the one helping you from here on. What's your name?",
+ "Do you remember the name of the agent?",
+ "No worries, we will find that down the road."]},
+{n:"Restate",c:"#f7e58a",w:"Say the trip back to them to make sure you understood.",o:[
+ "Just to make sure I've got it right, you're looking for a flight to xxxxx from xxxxx. Is that correct?",
+ "To confirm, you're looking for a flight from XXXX to XXXX on XXXX. Did I get that right?",
+ "Here's what I've got so far: you're looking for a flight from xxxx to xxxx on xxxx. Did I miss anything?"]},
+{n:"Situation Question",c:"#b9deb0",w:"Basic facts about the trip.",o:[
+ "How many passengers are travelling?",
+ "Do you have any airline preference?",
+ "What's your stops and layover time preference?",
+ "What type of seats are you looking into? Would you like to have flat-bed seats instead of just recliner seats?",
+ "What flight options would you like to see?"]},
+{n:"Preference",c:"#9fd3c2",w:"Ask about their ideal flight.",o:[
+ "To make sure I get everything right, could you tell me more about an ideal flight you are looking for?",
+ "To better assist you, could you let us know your flight preferences? For example, your preferred departure city, destination, travel dates, and type of seats.",
+ "To ensure we're on the same page, could you confirm if you have any specific preferences for airlines, travel dates, or stopovers?",
+ "We'd love to tailor our search to meet your needs. Can you tell us more about your preferences for airlines, layovers, or seat types?",
+ "For your trip, are there any preferences for airlines, departure times, or connections?",
+ "Date flexibility, airline preference, number of stops, layover time, etc."]},
+{n:"Questions",c:"#a9d8f0",w:"Deeper questions: why they travel and what matters to them.",o:[
+ "If it's okay to ask, what's the purpose of this trip? It helps me plan better.",
+ "To make sure I suggest the best options for your trip, can I ask, is this for business, a special occasion, or just touring?",
+ "Are you traveling for business or leisure or events or visiting family? This helps me find the most suitable options for you.",
+ "What's most important to you on this trip: comfort, timing, or price?",
+ "What's your top priority when booking a flight: price, comfort, or convenience?",
+ "Do you have concerns about the comfort of the flight, like legroom or the type of seat?",
+ "Have you encountered any issues with exchanges, refunds, missed connections, or lost bags?",
+ "To make sure I find the best options for you, do you have a particular budget range in mind for this trip?"]},
+{n:"Budget Questions",c:"#b5b8ee",w:"Price range, what they saw online, and what to say if the price is too high.",o:[
+ "To make sure I find the best options for you, do you have a particular budget range in mind for this trip?",
+ "Have you seen anything online within the price range you'd like to stay within?",
+ "Flights around the holidays can vary quite a bit. Have you seen anything online in the price range you'd like to stay within?",
+ "Have you done any research online?",
+ "Have you already done any research on flight options for this trip? If so, what did you find?",
+ "For business-class flights on this route, prices can range from $5,000 to $7,000 depending on flexibility. Does that fit within your expectations?",
+ "If I find a great business-class deal for around $6,500, would that work for you? Or should I aim for something lower?",
+ "One of the advantages of booking with us is that we specialize in finding hidden deals. To make sure I'm targeting the right fares, what's the ideal price range you'd like to stay within?",
+ "What's the maximum budget you'd be comfortable with for this trip? That'll help me tailor the options.",
+ "We can focus on premium options like lie-flat seats or prioritize cost-effective ones. What kind of budget would work for you to ensure the best balance between comfort and price?",
+ "Are you looking for the best available fare, or do you have a specific budget in mind so I can narrow down the options for you?",
+ "If the prices are out of our budget, would you consider flying Premium Economy?",
+ "One way we can often find significantly lower prices is by using promotional fares that don't include frequent flyer miles. Would that be something you'd consider?",
+ "Just to let you know, we have access to special promotional fares that are often much cheaper but don't include miles. Would you be interested in exploring those?",
+ "If I find something from our promotional offer, will you be able to make the reservation within 24 hours?",
+ "If they say it is cheaper online: [Name], our website searches for the lowest fares available throughout the year, so prices can vary based on dates and availability. I'd be happy to check the latest fare for your trip. Let me know your dates!",
+ "If they are not sure about a budget: If you're not sure about a budget yet, no problem. I'll look for options that balance price and comfort.",
+ "If they have no specific range: Not a problem if you don't have a specific range in mind. I'll look at a variety of options and share what works best.",
+ "Why we ask: Knowing your budget helps me focus on deals that give you the most value without overspending."]},
+{n:"Must Questions",c:"#c9b4e8",w:"5 things you must know before the call ends. Open each one for a question to ask.",o:[
+ "1. Budget: To make sure I find the best options for you, do you have a particular budget range in mind for this trip?",
+ "2. Purpose: If it's okay to ask, what's the purpose of this trip? It helps me plan better.",
+ "3. Market Knowledge: Have you seen anything online within the price range you'd like to stay within?",
+ "4. Booking Stage: If I find something from our promotional offer, will you be able to make the reservation within 24 hours?",
+ "5. Decision Maker: Is anyone else involved in choosing or paying for this trip? (my suggestion, there is no line for this in your table)"]},
+{n:"Request for Contact",c:"#d3c0ee",w:"Ask for email and phone.",o:[
+ "We have both published and private deals. The private deals are highly discounted, but to access them, we'll need your contact details. Could you please provide your email address or phone number?",
+ "To ensure you receive the best offers, can you please share your email with us? We'll send you the exclusive deals as soon as they're available.",
+ "Some of our best deals are time-sensitive. Can you share your phone number so we can notify you right away with any updates?",
+ "What's the best email address you would like to receive the flight options?",
+ "Could you please provide the contact phone number as well? So that I can create a file for you.",
+ "To speed up the process, could you provide me with your contact details, such as your email and phone number? I'll give you a call right away, and we can find the best flights more quickly."]},
+{n:"Delayed Communication",c:"#f4a5ad",w:"The search takes time. Tell them, and ask what to send while you work.",o:[
+ "It can take some time to provide you with several options because to find the best options we search for them manually. We'll keep you updated along the way.",
+ "For saving your time, we're currently sourcing exclusive offline deals from our partners. The search may take a bit of time as it's a manual process, but we'll notify you as soon as we have the best options ready.",
+ "While we're searching for the best deals, would you like us to send the results straight to your email or call you once everything is ready?",
+ "Please let me know more about your travel preferences:\n1. Flexibility regarding travel dates (departure and return flight)\n2. Any preferred airlines\n3. Number of stops and preferred layover time\n4. Things to avoid"]},
+{n:"Missed Chat",c:"#f9a97a",w:"Send this when the customer left before you answered.",o:[
+ "Sorry, I missed your chat. Please reach me by replying to this message or texting me at +1 xxx-xxx-xxx with your flight preferences. You can also send me an email at xxx@business-class.com. Thank you!",
+ "Please reach me by replying to this message or texting me at +1 xxx-xxx-xxx with your flight preferences. You can also send me an email at xxxx@business-class.com. Thank you!"]},
+{n:"Closing",c:"#f6e57a",w:"End the conversation.",o:[
+ "Is there anything else I can assist you with today? If not, I hope you have a wonderful day.",
+ "Thank you for reaching out to Business Class. If you have any more questions, don't hesitate to ask. Have a great day!",
+ "We look forward to assisting you with your future travel plans. Stay in touch, and have a fantastic day ahead!"]},
+{n:"Flight Presentation",c:"#aee3e6",w:"When you send options: say what they asked for, then why this option fits. Details like JFK, two bags and the 22nd are examples. Only promise what the fare really includes.",o:[
+ "Based on your preference for a short total travel time and flexibility with airlines, I've found a couple of great options.",
+ "This first option is great for you because it departs on the 22nd at night, as you wanted, and keeps your total travel time under 19 hours.",
+ "This fare includes two checked bags and access to the business-class lounge at JFK.",
+ "This itinerary works perfectly for your schedule and offers amazing value for business-class comfort!",
+ "I've found an itinerary that aligns perfectly with your need for a seamless and stress-free journey. This option departs in the evening, allowing you to rest before the flight, and includes a short layover at a premium airport with lounge access. Plus, it's on one of the most comfortable business-class cabins available for this route!",
+ "This itinerary offers the best balance between price and premium experience. It includes two checked bags, priority boarding, and lounge access to make your journey smooth and enjoyable. Plus, the layover is minimal, ensuring a quick and efficient connection.",
+ "Given your preference for minimizing total travel time, I've selected an itinerary that gets you to your destination as quickly as possible while keeping layovers short and efficient. You'll depart at a convenient time and arrive well-rested, with access to a top-tier business-class experience.",
+ "This flight gives you flexibility with rebooking options and potential upgrade opportunities. If you'd like to maximize comfort, I can check for upgrade availability or alternative routes that fit your needs while keeping costs reasonable.",
+ "I have sent you a couple of options with different airlines. Please take a look at that and let me know if you like the price, date, layover, airlines, etc."]}
+];
+var C=[
+/* Introduction */[
+["Use this when you call a customer who already enquired. You name the company and the destination, so they know it is not a random call.","Smile while you speak and say your name slowly. Then stop talking and let them answer."],
+["Use this in chat when the customer has just written in. It tells them you are a person who finds deals, not a bot.","Keep chat openers short. A long first message makes people stop reading."],
+["A simple, open opener when you do not know much yet. It lets the customer lead.","Do not follow it with a list of questions. Listen to the first answer and pick up on their words."]],
+/* FTC */[
+["Customers who contacted us before may already have an agent, a quote or a price in mind. Asking early avoids stealing another agent's customer or repeating work.","Ask it casually, like a normal question. Their answer tells you how warm this lead is."],
+["Taking ownership ('I will be the one helping you') makes the customer feel looked after. Using their name from now on builds trust.","Write their name down and use it two or three times in the conversation, not every sentence."],
+["If they say yes, finding the previous agent keeps the customer's history and avoids confusion inside the team.","If they do not remember, do not push. Check the system later by name, email or phone."],
+["Keeps the mood relaxed when they cannot remember. The customer should never feel tested.","Say it warmly and move straight on to the next question."]],
+/* Restate */[
+["Repeating the route back shows you listened and catches mistakes early. A wrong airport or city is costly later.","Check the city or airport names. Many cities have more than one airport."],
+["Same idea as the first line, but it adds the date. Dates change prices a lot, so confirm them.","If the dates are flexible, say so now: 'Are the dates fixed or can we move a few days?'"],
+["Use this when the customer has given details in pieces over a longer chat. It collects everything in one place.","Finish with 'Did I miss anything?' because customers often add one more detail."]],
+/* Situation */[
+["Passenger numbers change the price and seat availability. Ask early so you do not search for the wrong thing.","Also ask if there are children or infants. They are priced differently."],
+["Some customers care about one airline, some do not. Knowing this saves time on options they will refuse.","If they say 'no preference', ask 'any airline you would rather avoid?'"],
+["Layovers matter a lot on long trips. Some customers prefer a short trip, others accept a stop for a lower price.","Remember it. You will use their answer when you present flights later."],
+["Flat-bed seats are a big reason people pay for Business Class. Asking shows them the benefit and helps you decide what to search.","Explain the difference in one sentence if they are new to premium cabins."],
+["An open way to see what the customer imagines. Their answer shows what they care about most.","Write down their exact words. You can repeat them when you present the flights."]],
+/* Preference */[
+["Lets the customer describe the trip in their own words. People tell you more when they are not answering yes or no questions.","Be quiet after you ask. The long pause is where the real answer comes."],
+["Use this when the customer is unsure what to say. The examples give them something to answer.","Do not read the whole list in one go. Pick the one or two items that matter most."],
+["A polite way to fill in gaps. It checks airline, dates and stopovers together.","Use it when you have the route but not the details."],
+["Shows you will search around their needs, not hand them a standard offer.","Say it with confidence. It tells the customer your search is personal."],
+["A short, friendly version for a customer who does not want many questions.","Good for chat, where people reply faster to short messages."],
+["A reminder list for you: dates, airline, stops and layover time. These are the four things that change a fare most.","Cover all four before you start searching, so you only search once."]],
+/* Questions */[
+["Knowing the reason (business, family, holiday) lets you pitch comfort, timing or price in the right way.","Ask 'if it's okay to ask'. It sounds respectful, and most people answer."],
+["Offers three easy answers. Customers answer faster when they can choose.","A special occasion such as a honeymoon or anniversary is a chance to talk about comfort."],
+["Same goal as the lines above, with more choices. Visiting family often means price matters more, business often means timing.","Use whichever wording fits the customer's tone."],
+["Shows what the customer will pay extra for. Comfort, time or price can each lead to a different flight.","Repeat their answer when you present the flight: 'You said timing is most important, so...'"],
+["Same idea, slightly different words. Useful if the customer did not answer the first version.","Do not ask both in one conversation. Pick one."],
+["Business Class buyers care about sleep and space. Raising this tells you which seats and airlines to show.","If they mention a past bad flight, listen. It is a chance to show you care."],
+["Past problems are a selling point: you can say how a good agent helps with changes, refunds and delays.","Do not criticise other companies. Just listen and say we will help."],
+["The budget question appears here too in your table. Ask it once you know the purpose, so the number makes sense.","If they hesitate, move to a softer budget line from Budget Questions."]],
+/* Budget */[
+["The core budget question. The customer's number tells you where to search and how far to go.","Say 'range' and not 'budget'. A range feels easier to give."],
+["Tells you if they have price research and what number we have to beat or match.","Ask where they saw it. The answer shows how informed they are."],
+["Holiday dates make prices jump. Naming this prepares them and sounds like an expert.","Use it only for peak periods such as Christmas, Easter or summer."],
+["A light way to ask about research. Customers who have researched are closer to buying.","Follow up with 'what did you find?' and listen for a price."],
+["Same as the line above, but asks what they found. A real number gives you a target.","If they saw a lower price, ask for the dates and airline. You may be comparing different fares."],
+["Gives them a typical price so they can react. Easier than asking for a number from nothing.","Use real numbers for the route. Never quote a range you cannot support."],
+["A test price. Their reaction (yes, or too high) tells you how flexible they are.","Say 'around', not an exact figure. It keeps the offer open."],
+["Explains why booking with us is different, then asks for the price range. It sells and asks at once.","Say 'hidden deals' calmly and do not exaggerate."],
+["Asks for the top limit, so you do not waste time on options above it.","If they give a number, you can often say 'let me see if I can find something below that.'"],
+["Shows the choice between luxury and cost. Gets the customer to say what matters more.","Pause after. They will tell you which they prefer."],
+["Gives two easy answers: lowest price, or a number. Good when the customer is vague.","If they say 'the best', ask 'best price or best comfort?'"],
+["Use when the budget is lower than the price. Premium Economy is a cheaper step that still has more space than Economy.","Say 'would you consider' and not 'you cannot afford'. Never make the customer feel small."],
+["Promotional fares can be cheaper but often do not earn miles. Ask permission before you use them.","Be clear about what is not included, such as miles. Surprises later lose trust."],
+["Same idea in a softer way. Raises the chance of a cheaper offer.","Use when the customer says the price is too high."],
+["Checks if the customer is ready to book. Promotional fares can change quickly, so slow decisions can lose the price.","Ask it kindly. It is about timing, not pressure."],
+["Use when a customer says they saw it cheaper online. It does not argue, and it asks for dates so you can check the real fare.","Never say they are wrong. Ask for details, then compare the same dates and same cabin."],
+["Takes pressure off a customer who has no number. You will balance price and comfort for them.","After this, ask about purpose so you know what balance to pick."],
+["Same idea. The customer feels free to answer later, and you still have a plan.","Offer two or three different prices when you present, so they can choose."],
+["Explains why you ask for a budget. It is for their benefit, so people share more.","Use it when a customer resists the question."]],
+/* Must */[
+["Budget is one of the five things you must know. Without it you cannot choose what to search.","If they will not give a number, at least learn if they care more about price or comfort."],
+["Purpose tells you what to emphasise: comfort for business, price for family visits.","Write it in your notes. You will use it again in the flight presentation."],
+["Market knowledge means how much the customer already knows and has seen. A customer with a price in mind needs a different approach.","Ask where they looked and what they found."],
+["Booking stage means how soon they will buy. It tells you if they are ready now or only looking.","Use 'within 24 hours' only for fares that really may change."],
+["A decision maker is the person who says yes. If someone else is involved, they must see your offer too.","Ask kindly. If someone else decides, offer to send the details so they can share them."]],
+/* Contact */[
+["Explains why we need their details: the best prices are private. People share contacts when they see a clear benefit.","Ask for email or phone, not both. It feels easier to say yes."],
+["Asks only for the email. A short ask is easier to agree to.","Say what they will receive and when."],
+["Creates urgency in an honest way. Some fares do change fast.","Only say 'time-sensitive' when it is true."],
+["Use when the customer has agreed to email. It confirms the address so offers do not go to the wrong inbox.","Repeat the address back to be sure."],
+["A phone number lets us follow up by call, which often closes better than email.","Explain why: so you can create a file and call with updates."],
+["Use when the customer is in a hurry. A call moves faster than messages.","Offer to call right away, so the contact feels like a benefit."]],
+/* Delayed */[
+["Searches take time because they are done by hand. Saying so sets expectations and stops the customer feeling ignored.","Give a time range if you can, such as 'within a few hours'."],
+["Explains that you are working on private offers from partners. It makes the wait feel valuable.","Do not promise a time you cannot meet."],
+["Lets the customer choose how to be contacted. Choice makes people feel in control.","Write their choice in the file and follow it."],
+["While you search, you can use the wait to collect details: dates, airlines, stops and things to avoid.","Send it as a short numbered list so it is easy to answer."]],
+/* Missed */[
+["Use when a chat ended before you could reply. It is polite and gives three ways to reach you.","Send it within minutes. Fast follow-ups win customers back."],
+["A shorter version for a quick follow-up message.","Fill in your real number and email before you send."]],
+/* Closing */[
+["Gives the customer a last chance to ask anything. It stops you ending too soon.","If they ask something new, answer it fully before you close."],
+["A friendly, simple close. It leaves the door open.","Make sure you said the next step before this line, such as 'I will email you tonight'."],
+["Builds a long-term relationship. It makes the customer feel valued, not just sold to.","Say it only if the call went well. If you are waiting for them to decide, use a clear next step instead."]],
+/* Flight */[
+["Starts by repeating what the customer said they wanted. It shows the options are made for them.","Use their exact words from earlier in the call."],
+["Links one option to two real things the customer asked for. This is the strongest way to present a flight.","Check the dates and times before you say them. The details here are examples."],
+["Names the extras, like bags and lounge. Customers like to know what comes with the price.","Only promise what the fare includes. Check the fare rules."],
+["A short, positive line to introduce an option.","Follow it with one real reason why it fits."],
+["Describes comfort and timing in a way that helps the customer picture the trip.","Replace the general words with real details from the fare."],
+["Frames the option as the best balance of price and quality. Good for a customer who cares about value.","Say what the fare includes, so the claim is true."],
+["Use for a customer who said short travel time matters most.","Show total travel time in hours so it is clear."],
+["Talks about flexibility for changes and upgrades. Good for customers worried about plans changing.","Never promise upgrades. Say you can check."],
+["Use after you email the options. It tells them what to do next and what to compare.","Ask one question at the end, such as 'which one do you like best?'"]]
+];
+
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+function hl(s){return esc(s).replace(/(\[Name\]|\bX{3,}\b|\bx{3,}(?:\.x{2,})?\b|\+1 xxx-xxx-xxx|xxx@|xxxx@)/g,function(m){return "<mark>"+m+"</mark>"}).replace(/\n/g,"<br>")}
+var ARROW='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>';
+var tabs=document.getElementById("tabs"),panel=document.getElementById("panel"),cur=0;
+tabs.innerHTML=D.map(function(d,i){return '<li role="presentation"><button class="tab" role="tab" type="button" data-i="'+i+'" style="--c:'+d.c+'">'+d.n+'<span class="cnt">'+d.o.length+'</span></button></li>'}).join("");
+function optHtml(t,k,c,label,co){
+  var ch=co?'<div class="coach"><p class="h">Coach\'s note</p><p>'+esc(co[0])+'</p><p class="t">Tip: '+esc(co[1])+'</p></div>':'';
+  return '<li class="opt" style="--c:'+c+'"><button type="button" aria-expanded="false"><span class="num">'+(k+1)+'</span><span class="pre">'+(label?'<b>'+esc(label)+':</b> ':'')+esc(t)+'</span><span class="arr">'+ARROW+'</span></button><div class="full">'+(label?'<span class="from">'+esc(label)+'</span>':'')+'<p>'+hl(t)+'</p>'+ch+'</div></li>'}
+var allOpen=false;
+function setToggle(){document.getElementById("tog").textContent=allOpen?"Close all":"Open all"}
+function show(i){
+  cur=i;var d=D[i];allOpen=false;setToggle();
+  [].forEach.call(tabs.querySelectorAll(".tab"),function(b,k){b.setAttribute("aria-selected",k===i?"true":"false")});
+  panel.style.setProperty("--c",d.c);
+  panel.innerHTML='<h2>'+esc(d.n)+' <span style="font-size:15px;color:var(--muted);font-weight:500">('+d.o.length+' options)</span></h2><p class="when">'+esc(d.w)+'</p><ul class="opts">'+d.o.map(function(t,k){return optHtml(t,k,d.c,'',C[i][k])}).join("")+'</ul>';
+}
+function search(v){
+  v=v.toLowerCase();var out=[];
+  D.forEach(function(d,di){d.o.forEach(function(t,k){if(t.toLowerCase().indexOf(v)>-1)out.push(optHtml(t,out.length,d.c,d.n,C[di][k]))})});
+  [].forEach.call(tabs.querySelectorAll(".tab"),function(b){b.setAttribute("aria-selected","false")});
+  panel.style.setProperty("--c","#c8d0d8");allOpen=false;setToggle();
+  panel.innerHTML='<h2>Search results <span style="font-size:15px;color:var(--muted);font-weight:500">('+out.length+')</span></h2><p class="when">Lines from every subject that match what you typed.</p>'+(out.length?'<ul class="opts">'+out.join("")+'</ul>':'<p class="when">No line matches.</p>');
+}
+var TOTAL=D.reduce(function(a,d){return a+d.o.length},0);
+document.getElementById("total").textContent=TOTAL+" lines in "+D.length+" subjects. Every line from your table is here (exact repeats are shown where they were used).";
+document.getElementById("q").addEventListener("input",function(e){var v=e.target.value.trim();if(v)search(v);else show(cur)});
+document.getElementById("tog").addEventListener("click",function(){
+  allOpen=!allOpen;setToggle();
+  [].forEach.call(panel.querySelectorAll(".opt"),function(li){li.classList.toggle("open",allOpen);li.firstChild.setAttribute("aria-expanded",allOpen?"true":"false")});
+});
+tabs.addEventListener("click",function(e){var b=e.target.closest(".tab");if(b){document.getElementById("q").value="";show(+b.getAttribute("data-i"))}});
+function fb(t){var a=document.createElement("textarea");a.value=t;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();try{document.execCommand("copy")}catch(e){}document.body.removeChild(a)}
+panel.addEventListener("click",function(e){
+  var cp=e.target.closest(".copy");
+  if(cp){
+    var t=cp.parentNode.querySelector("p").innerHTML.replace(/<br>/g,"\n").replace(/<[^>]+>/g,"").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">");
+    var ok=function(){cp.textContent="Copied";cp.classList.add("done");setTimeout(function(){cp.textContent="Copy";cp.classList.remove("done")},1400)};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok,function(){fb(t);ok()})}else{fb(t);ok()}
+    return;
+  }
+  var h=e.target.closest(".opt>button");
+  if(h){var li=h.parentNode,open=!li.classList.contains("open");li.classList.toggle("open",open);h.setAttribute("aria-expanded",open?"true":"false")}
+});
+show(0);
+</script>
+
+</body>
+</html>
